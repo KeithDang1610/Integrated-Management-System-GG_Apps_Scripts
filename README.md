@@ -1,4 +1,4 @@
-# Management-Integrated-System-GG_Apps_Scripts
+# Integrated-Management-System-GG_Apps_Scripts
 ## Context:
 Traditionally, students who want to borrow equipment (such as tools or machines) for extra practice must meet with a manager or teacher to make a request. This can be inconvenient due to the potential absence of the manager, leading to wasted time for students who have to come back later. To address these issues, an online system has been developed to automate and streamline the process.
 ### Challenges:
