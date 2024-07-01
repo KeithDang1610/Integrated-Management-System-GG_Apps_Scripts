@@ -1,0 +1,106 @@
+var ss = SpreadsheetApp.getActiveSpreadsheet();
+var sheet = ss.getSheetByName("Xuất Thông Tin Sử Dụng Thiết Bị");
+var cal = CalendarApp.getCalendarById('quanlyxuongc1@gmail.com');
+var cal2 = CalendarApp.getCalendarById('59c2a7724f310a5833d2c301c4eda832c5a3c2d8d6a7a3fbd01c2edd224dcdef@group.calendar.google.com');
+
+function myButton3(e) {
+  var start_date = new Date(sheet.getRange("L1").getValue().getTime() +7 * 60 * 60 * 1000);
+  var end_date = new Date(sheet.getRange("L2").getValue().getTime()+ 18 * 60 * 60 * 1000);
+   var events = cal.getEvents(start_date, end_date);
+   //var MArray = ["Tiện", "Phay", "Bào", "Nguội", "Hàn"]
+   Logger.log(events)
+   for (i =0; i< events.length; i++) {
+    this.machine = events[i].getTitle().split(' , ')[0];
+    this.name = events[i].getTitle().split(' , ')[1];
+    this.date = events[i].getStartTime().getDate();
+    this.month = (events[i].getStartTime().getMonth() +1);
+    this.year = events[i].getStartTime().getFullYear();
+    this.starttime = events[i].getStartTime().getHours();
+    this.endtime = events[i].getEndTime().getHours();
+    this.row = sheet.getRange("C1:C").getValues().filter(String).length +2
+    getEvent(machine);
+    }
+   
+  SpreadsheetApp.flush() 
+  SpreadsheetApp.getUi().alert("Xuất dữ liệu hoàn tất");
+}
+
+//function List_Data(){
+ // var row = sheet.getRange("C1:C").getValues().filter(String).length +1
+  //sheet.getRange(row , 1).setValue(date+"/"+ month+"/"+year);
+  //sheet.getRange(row , 2).setValue( starttime +" : "+ endtime+ " giờ");
+  //sheet.getRange(row, 6).setValue(name);
+//}
+
+function getEvent(machine){
+  switch (machine) {
+    case "Tiện3":
+        for (t=0; t<3; t++){
+          sheet.getRange(row+t, 3).setValue("T"+[t+1]);
+          sheet.getRange(row+t , 1).setValue(date+"/"+ month+"/"+year);
+          sheet.getRange(row+t, 2).setValue( starttime +" : "+ endtime+ " giờ");
+          sheet.getRange(row+t, 6).setValue(name);
+        }
+    break;
+    case "Tiện":
+        for (t=0; t<5; t++){
+          sheet.getRange(row+t , 3).setValue("T"+[t+1]);
+          sheet.getRange(row+t , 1).setValue(date+"/"+ month+"/"+year);
+          sheet.getRange(row+t , 2).setValue( starttime +" : "+ endtime+ " giờ");
+          sheet.getRange(row+t , 6).setValue(name);
+     
+        }
+    break;
+    case "Nguội":
+      for (k=0; k<3; k++){
+        sheet.getRange(row+k , 3).setValue("K"+[k+1]);
+        sheet.getRange(row+k, 1).setValue(date+"/"+ month+"/"+year);
+        sheet.getRange(row+k, 2).setValue( starttime +" : "+ endtime+ " giờ");
+        sheet.getRange(row+k, 6).setValue(name);
+      }
+    break;
+    case "GCAL":
+    break;
+    case "Hàn":
+      for (h=0; h<9; h++){
+        row2= row+h
+        sheet.getRange(row2, 3).setValue("H"+[h+1]);
+        sheet.getRange(row2 , 1).setValue(date+"/"+ month+"/"+year);
+        sheet.getRange(row2 , 2).setValue( starttime +" : "+ endtime+ " giờ");
+        sheet.getRange(row2, 6).setValue(name);
+      }
+    break;
+    case "Phay3":
+      for (p=0; p<4; p++){
+        sheet.getRange(row+p, 3).setValue("P"+[p+1]);
+        sheet.getRange(row+p , 1).setValue(date+"/"+ month+"/"+year);
+        sheet.getRange(row+p, 2).setValue( starttime +" : "+ endtime+ " giờ");
+        sheet.getRange(row+p, 6).setValue(name);
+      }
+    break;
+    case "Phay":
+      for (p=0; p<8; p++){
+        sheet.getRange(row+p, 3).setValue("P"+[p+1]);
+        sheet.getRange(row+p, 1).setValue(date+"/"+ month+"/"+year);
+        sheet.getRange(row+p, 2).setValue( starttime +" : "+ endtime+ " giờ");
+        sheet.getRange(row+p, 6).setValue(name);
+      }
+    break;
+    case "Bào":
+      for (b=0; b<5; b++){
+        sheet.getRange(row+b, 3).setValue("B"+[b+1]);
+        sheet.getRange(row+b, 1).setValue(date+"/"+ month+"/"+year);
+        sheet.getRange(row+b, 2).setValue( starttime +" : "+ endtime+ " giờ");
+        sheet.getRange(row+b, 6).setValue(name);
+      }
+    break;
+    case "Đúc":
+    break;
+    case "CNC":
+      sheet.getRange(row, 3).setValue("W1");
+      sheet.getRange(row, 1).setValue(date+"/"+ month+"/"+year);
+      sheet.getRange(row, 2).setValue( starttime +" : "+ endtime+ " giờ");
+      sheet.getRange(row, 6).setValue(name);  
+    break;
+  }
+}

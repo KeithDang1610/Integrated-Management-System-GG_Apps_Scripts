@@ -1,0 +1,32 @@
+var ss = SpreadsheetApp.getActiveSpreadsheet();
+var sheet = ss.getSheetByName("Xuất Sổ Ra Vào Xưởng");
+var cal = CalendarApp.getCalendarById('quanlyxuongc1@gmail.com');
+var cal2 = CalendarApp.getCalendarById('59c2a7724f310a5833d2c301c4eda832c5a3c2d8d6a7a3fbd01c2edd224dcdef@group.calendar.google.com');
+var start_date = new Date(sheet.getRange("J1").getValue().getTime() +7 * 60 * 60 * 1000);
+var end_date = new Date(sheet.getRange("J2").getValue().getTime()+ 18 * 60 * 60 * 1000);
+var events = cal.getEvents(start_date, end_date);
+
+function myButton5() {
+   Logger.log(events)
+   for (i =0; i< events.length; i++) {
+    this.machine = events[i].getTitle().split(' , ')[0];
+    this.name = events[i].getTitle().split(' , ')[1];
+    this.date = events[i].getStartTime().getDate();
+    this.month = (events[i].getStartTime().getMonth() +1);
+    this.year = events[i].getStartTime().getFullYear();
+    this.starttime = events[i].getStartTime().getHours();
+    this.endtime = events[i].getEndTime().getHours();
+    sheet.getRange(i+3, 1).setValue(date+"/"+ month+"/"+year);
+    sheet.getRange(i+3, 3).setValue( starttime +" : "+ endtime+ " giờ");
+    sheet.getRange(i+3, 2).setValue(name);
+    sheet.getRange(i+3, 6).setValue("Nguyễn Văn Minh");
+    //this.row = sheet.getRange("C1:C").getValues().filter(String).length +2
+    //getEvent(machine);
+    }
+   
+  SpreadsheetApp.flush() 
+  SpreadsheetApp.getUi().alert("Xuất dữ liệu hoàn tất");
+}
+
+
+

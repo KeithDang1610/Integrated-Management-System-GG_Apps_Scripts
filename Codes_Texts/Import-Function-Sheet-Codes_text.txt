@@ -1,0 +1,121 @@
+var ss = SpreadsheetApp.getActiveSpreadsheet();
+var sheet = ss.getSheetByName("Nhập Thông Tin Sử Dụng Thiết Bị");
+var cal = CalendarApp.getCalendarById('quanlyxuongc1@gmail.com');
+var dict = {"#00b050":"Nguội", "#ffff00":"Tiện","#00b0f0":"GCAL","#ff0000":"Hàn","#7030a0":"Phay", "#002060":"Bào",
+"#ffc000":"Đúc","#92d050":"CNC"};
+var modul;
+var start_time;
+var end_time;
+
+function myFunction() {
+  var row = sheet.getRange("B2:2").getValues();
+    for (i=0; i<16; i++) {
+      for (a=0; a<row[0].filter(Number).length; a++){
+          var dateloop = new Date(sheet.getRange(3,1).getValue().getTime() + [a]*(7 * 24 * 60 * 60 * 1000));
+        // Logger.log(dateloop)
+        if (i<8) {
+            start_time = new Date(dateloop.getTime() + 7* 60 * 60 * 1000);
+            end_time = new Date(dateloop.getTime() + 12 * 60 * 60 * 1000);
+          }
+          else {
+            start_time = new Date(dateloop.getTime() + 13 * 60 * 60 * 1000);
+            end_time = new Date(dateloop.getTime() +18 * 60 * 60 * 1000);
+          }
+          var color = sheet.getRange([i+4],[a+2]).getBackground();
+          var data = sheet.getRange([i+4],[a+2]).getValue();
+          var data_store;
+          
+        if (data !== "") {
+          data_store = data
+        }
+      
+        if ( data == ""){
+          data = data_store;
+        }
+
+        if (dict.hasOwnProperty(color)){
+        modul = dict[color];
+        }
+        if (data =="NGHỈ"|| data =="N" || data =="n" ){}
+        else {
+          if (modul == "Tiện" && data == "Thầy Nam"){
+            modul = "Tiện3"
+            cal.createEvent(modul + " , " + data, start_time,end_time )
+          }
+          else if (modul == "Phay" && data == "Thầy Nam"){
+            modul = "Phay3"
+            cal.createEvent(modul + " , " + data, start_time,end_time )
+          }
+          else {
+            cal.createEvent(modul + " , " + data, start_time,end_time )
+          }
+        }
+        }
+      }
+  
+}
+
+
+function getBack(){
+  var range = sheet.getRange('B4:N11')
+  var range2 = sheet.getRange('B13:N20')
+  sheet.getRange(3,1).setValue("Nhập thời gian vào đây");
+  range.setBackground(null);
+  range2.setBackground(null);
+  range.setValue("");
+  range2.setValue("");
+  range.breakApart();
+  range2.breakApart();
+  range.setBorder(true, true, true, true, false, false)
+  range2.setBorder(true, true, true, true, false, false)
+}
+
+
+function myButton() {
+  var check = sheet.getRange(3,1).getValue();
+  var ui = SpreadsheetApp.getUi();
+  if (check == "Nhập thời gian vào đây" || check =="") {
+    ui.alert("Vui lòng nhập đúng ngày bắt đầu");
+  }
+  else{
+    var response = ui.alert('Kiểm Tra Xem Đã Điền "NGHỈ" Vào Các Ô Trống Chưa. Nếu Chắc Chắn Hãy Click OK',ui.  ButtonSet.OK_CANCEL)
+    if (response == ui.Button.OK) {
+      var announce = (sheet.getRange(3,1).getValue().getDay()+1);
+      var announce1 = sheet.getRange("A1").getValue().slice(23,24);
+      if (announce!=announce1){
+        myFunction();
+        Logger.log(announce);
+        if (announce == 1){
+        sheet.getRange(1,1).setValue("Bạn đã nhập xong lịch")
+        }
+        else {
+        sheet.getRange(1,1).setValue("Lần nhập trước là: Thứ " +announce)
+        }
+        SpreadsheetApp.getUi().alert("Nhập thành công");
+      }
+      else {
+        ui.alert("Dữ liệu này đã được nhập. Vui lòng nhập ngày tiếp theo.")
+      }
+    }
+  }
+}
+
+function myButton1() {
+  getBack();
+  SpreadsheetApp.flush();
+  SpreadsheetApp.getUi().alert("Đã xóa thông tin");
+}
+
+function Cancel_Calendar() {
+  var row_del = sheet.getRange("B2:2").getValues();
+  for (d =0; d<row_del[0].filter(Number).length; d++){
+    var dateloop = new Date(sheet.getRange("J22").getValue().getTime() + [d]*(7 * 24 * 60 * 60 * 1000));
+    var start_time_del = new Date(dateloop.getTime() + 7* 60 * 60 * 1000);
+    var  end_time_del = new Date(dateloop.getTime() + 18* 60 * 60 * 1000);
+    var events = cal.getEvents(start_time_del,end_time_del)
+    Logger.log(events)
+    for (ed = 0; ed <events.length; ed ++){
+      events[ed].deleteEvent()
+    }
+  }
+}

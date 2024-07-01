@@ -1,0 +1,120 @@
+var ss = SpreadsheetApp.getActiveSpreadsheet();
+var sheet = ss.getActiveSheet();
+var cal = CalendarApp.getCalendarById('quanlyxuongc1@gmail.com');
+var titles = [];
+var names = [];
+
+function getEvents() {
+   var endtime = sheet.getRange(3,5).getValue();
+   date = new Date(sheet.getRange(3, 3).getValue().getTime());
+   Logger.log(date)
+   if (endtime == "Sáng"){
+          starttime = new Date(date.getTime()+(7 * 60 * 60 * 1000))
+          endtime = new Date(date.getTime()+(11 * 60 * 60 * 1000))
+   }
+   else {
+        starttime = new Date(date.getTime()+(13 * 60 * 60 * 1000))
+        endtime = new Date(date.getTime()+(18 * 60 * 60 * 1000))
+   }
+    Logger.log(starttime);
+    Logger.log(endtime);
+    var events = cal.getEvents(starttime, endtime);
+    Logger.log(events);
+    for (var i=0; i<events.length;i++){
+    var modul = events[i].getTitle().split(" , ")[0];
+    if (modul.length>2){
+    classifyEvent(modul);
+    }
+    else {
+      titles.push(modul);
+    }
+  } 
+   
+   Logger.log(titles);
+   var Lathes = sheet.getRange('A5:A').getValues();
+   var Millings = sheet.getRange('B5:B').getValues();
+   var Drilling = sheet.getRange('C5:C').getValues();
+   var EDM = sheet.getRange('D5:D').getValues();
+   var Planing = sheet.getRange('E5:E').getValues();
+   var Machines = [Lathes, Millings, Drilling, EDM, Planing];
+   //Logger.log(Machines);
+    for (a =0; a< titles.length; a++){
+      for (c=0; c<5; c++ )
+      {
+        for (dtc=0; dtc<Machines[c].filter(String).length;dtc++){
+          if (titles[a] == Machines[c][dtc]){
+            sheet.getRange([dtc+5],[c+1]).setBackground("Red");
+            Logger.log(c)
+            Logger.log(dtc)
+          }
+        }
+      }
+    }
+
+}
+
+function classifyEvent(modul){
+  switch (modul) {
+    case "Tiện":
+      for (t=0; t<5; t++){
+      title = "T"+[t+1];
+      titles.push(title)  
+      } 
+    break;
+    case "Nguội":
+      for (k=0; k<3; k++){
+      title = "K"+[k+1];
+      titles.push(title)  
+      }
+    break;
+    case "GCAL":
+    break;
+    case "Hàn":
+      for (h=0; h<9; h++){
+      title = "H"+[h+1];
+      titles.push(title)  
+      }
+    break;
+    case "Phay":
+      for (p=0; p<8; p++){
+      title = "P"+[p+1];
+      titles.push(title)  
+      }
+    break;
+    case "Bào":
+      for (b=0; b<5; b++){
+      title = "B"+[b+1];
+      titles.push(title)  
+      }
+    break;
+    case "Đúc":
+    break;
+    case "CNC":
+      title = "W1";
+      titles.push(title) 
+    break;
+  }
+}
+
+function onEdit(e) {
+ // let ss = SpreadsheetApp.getActiveSpreadsheet();
+ // let sheet = ss.getActiveSheet();
+  var range = e.range;
+  var col = range.getColumn();
+  var row = range.getRow();
+ // var cal = CalendarApp.getCalendarById('quanlyxuongc1@gmail.com');
+  if(col == 6 && row == 3 && sheet.getRange("F3").getValue()==true) {
+    sheet.getRange('A5:E12').setBackground(null);
+    getEvents();
+    sheet.getRange("F3").setValue(false);
+    SpreadsheetApp.flush();
+    SpreadsheetApp.getUi().alert("Check thành công");
+ }
+}
+
+function onOpen() {
+    sheet.getRange("C3").setValue(new Date());
+    sheet.getRange("E3").setValue(null);
+    sheet.getRange('A5:E12').setBackground(null);
+    sheet.getRange("F3").setValue(false);
+}

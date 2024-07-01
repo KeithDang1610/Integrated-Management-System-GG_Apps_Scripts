@@ -1,0 +1,210 @@
+var ss = SpreadsheetApp.getActiveSpreadsheet();
+var sheet = ss.getSheetByName("Quản Lý Cho Mượn Thiết Bị Ngoại Khóa");
+var lastRow = sheet.getLastRow();
+var lastColumn = sheet.getLastColumn();
+
+// Calendar to output requests
+var calendar = CalendarApp.getCalendarById('quanlyxuongc1@gmail.com');
+
+// Creates an object from the last form submission
+function Submission(row){
+  this.timestamp = sheet.getRange(row, 1).getValue();
+  this.idstudent = sheet.getRange(row, 2).getValue();
+  this.name = sheet.getRange(row, 3).getValue();
+  this.machine1 = sheet.getRange(row, 4).getValue();
+  this.machine2 = sheet.getRange(row, 5).getValue();
+  this.machine3 = sheet.getRange(row, 6).getValue();
+  this.machine4 = sheet.getRange(row, 7).getValue();
+  this.machine5 = sheet.getRange(row, 8).getValue();
+  this.reason = sheet.getRange(row, 9).getValue();
+  this.email = sheet.getRange(row, 10).getValue();
+  this.date = new Date(sheet.getRange(row, 11).getValue());
+  this.dateString = this.date.getDate() + '/' + (this.date.getMonth() + 1) + '/' + (this.date.getYear()+1900);
+  this.time = sheet.getRange(row,12).getValue();
+  this.timeString = this.time.toLocaleTimeString();
+   // Adjust time and make end time
+  this.date.setHours(this.time.getHours());
+  this.date.setMinutes(this.time.getMinutes());
+  this.endTime = new Date(this.date);
+  this.endTime.setHours(this.time.getHours() + 5);
+}
+
+// Check for conflicting events
+function getConflicts(request) {
+  var conflicts = calendar.getEvents(request.date, request.endTime);
+  //Logger.log(conflicts)
+  var conflicts_Titles = [];
+  for (c = 0; c<conflicts.length; c++){
+    var conflicts_Title= conflicts[c].getTitle().split(" , ")[0];
+    if (conflicts_Title.length >2){
+      switch(conflicts_Title) {
+        case "Tiện":
+        var T_array =["T1", "T2", "T3", "T4", "T5"];
+        conflicts_Titles = conflicts_Titles.concat(T_array);
+        break;
+        case "Phay":
+        var P_array = ["P1", "P2", "P3", "P4", "P5","P6","P7","P8"];
+        conflicts_Titles = conflicts_Titles.concat(P_array);
+        break;
+        case "Nguội":
+        var K_array = ["K1", "K2", "K3"]
+        conflicts_Titles = conflicts_Titles.concat(K_array);
+        break;
+        case "Bào":
+        var B_array =["B1", "B2", "B3", "B4", "B5"]
+        conflicts_Titles = conflicts_Titles.concat(B_array);
+        break;
+      }
+    }
+    else{
+      conflicts_Titles.push(conflicts_Title);
+    }
+  }
+  var machine = [request.machine1, request.machine2, request.machine3, request.machine4];
+ // Logger.log(machine)
+  var a = 0;
+  for (i=0; i<conflicts_Titles.length; i++){
+    for (j=0; j<4; j++){
+      if (machine[j] == conflicts_Titles[i]){
+        a ++;
+       }
+    }
+  }
+  if (a > 0){
+    request.status = "Trùng lịch";
+    sheet.getRange(lastRow, lastColumn - 1).setValue("Từ chối");
+    sheet.getRange(lastRow, lastColumn).setValue("Đã Gửi: Trùng");
+  }
+  else {
+    request.status = "New"; 
+  }
+}
+
+// Convert data of status and notified columns into array
+function StatusObject(){
+  this.statusArray = sheet.getRange(1, lastColumn -1, lastRow, 1).getValues();
+ // Logger.log(statusArray);
+  this.notifiedArray = sheet.getRange(1, lastColumn, lastRow, 1).getValues();
+  this.statusArray = [].concat.apply([], this.statusArray);
+  this.notifiedArray = [].concat.apply([], this.notifiedArray);
+}
+
+// Get the index of the row that has had a status change
+function getChangeIndex(statusChange){
+  statusChange.index = statusChange.notifiedArray.indexOf("");
+  statusChange.row = statusChange.index + 1;
+  if (statusChange.index == -1){
+    return;
+  } else if (statusChange.statusArray[statusChange.index] != "") {
+    statusChange.status = statusChange.statusArray[statusChange.index];
+    sheet.getRange(statusChange.row, lastColumn).setValue("Đã Gửi: " + statusChange.status);
+    statusChange.notifiedArray[statusChange.index] = "update";
+  } else {
+    statusChange.status = statusChange.statusArray[statusChange.index];
+    statusChange.notifiedArray[statusChange.index] = "no update";
+  }
+}
+
+// Draft contents for emails depending on needed message
+function draftEmail(request){
+  request.buttonLink = "https://forms.gle/JQfEwcbYnJTe6D6g6"
+  request.buttonText = "Đăng ký mới";
+  switch (request.status) {
+    case "New":
+      request.subject = "Đăng ký mượn thiết bị ngày " + request.dateString + " Thông tin đăng ký đã được gửi đi";
+      request.header = "Xác nhận đã đăng ký";
+      request.message = "Sau khi người phụ trách kiểm tra thông tin, bạn sẽ nhận được phản hồi email sau đó";
+      break;
+    case "New2":
+      request.email = "quanlyxuongc1@gmail.com";
+      request.subject = "Đăng ký mới " + request.dateString;
+      request.header = "Yêu cầu đăng ký mượn máy";
+      request.message = "Đăng ký mượn máy cần duyệt";
+      request.buttonLink = 
+"https://docs.google.com/spreadsheets/d/10RIJuw6qIFdABdJlzlR9aE9JrCREEb8g1_P1ZspV3L0/edit?usp=sharing";
+      request.buttonText = "Kiểm tra hồ sơ đăng ký";
+      break;
+    case "Đồng ý":
+      request.subject = "XÁC NHẬN: BẠN ĐÃ ĐĂNG KÝ THÀNH CÔNG " + request.dateString;
+      request.header = "Xác nhận thành công";
+      request.message = "Bạn vui lòng chuẩn bị dụng cụ liên quan và gặp gỡ người phụ trách theo đúng lịch";
+      break;
+    case "Trùng lịch":
+      request.subject = "THÔNG BÁO: THIẾT BỊ ĐĂNG KÝ ĐÃ CÓ SỬ DỤNG " + request.dateString;
+      request.header = "Trùng lịch";
+      request.message = "Thời gian đăng ký mượn thiết bị đã trùng với lịch thực tập";
+      request.buttonText = "Đăng ký lại";
+      break;
+    case "Từ chối":
+      request.subject = "CẬP NHẬT LẠI THÔNG TIN ĐĂNG KÝ CHO " + request.dateString;
+      request.header = "Vui lòng đăng ký lại";
+      request.message = "Thông tin đăng ký mượn máy của bạn chưa phù hợp nên đã bị từ chối "+
+        "Bạn có thể đăng ký bổ sung lại";
+      request.buttonText = "Đăng ký lại";
+      break;
+  }
+}
+
+// Creates a calendar event using the submitted data
+function updateCalendar(request){
+ var machine = [request.machine1, request.machine2, request.machine3, request.machine4, request.machine5];
+ Logger.log(machine)
+ for (i=0; i<5; i++){
+    if (machine[i]=="Không" || machine[i]==null){
+    }
+    else{
+        var event = calendar.createEvent(
+        machine[i]+ " , " + request.name,
+        request.date,
+        request.endTime
+        )
+      }
+  }
+}
+
+
+
+// Send Email
+function sendEmail(request){ // MailApp.sendEmail is old
+  MailApp.sendEmail({
+    to: request.email,
+    subject: request.subject,
+    htmlBody: makeEmail(request)
+  })
+}
+
+// --------------------  Main Functions ---------------------
+function onFormSubmission(){
+  var request = new Submission(lastRow);
+  //Logger.log(request)
+  getConflicts(request);
+  draftEmail(request);
+  sendEmail(request);
+  if (request.status == "New"){
+    request.status = "New2";
+    draftEmail(request);
+    sendEmail(request);
+  }
+}
+
+// Triggered function to check if any status has changed
+function onEdit(){
+  var statusChange = new StatusObject();
+  while (true){
+    getChangeIndex(statusChange);
+    if (statusChange.index == -1){
+      return;
+    } else {
+      var request = new Submission(statusChange.row);
+      Logger.log(request)
+      if (statusChange.status){
+        request.status = statusChange.status;
+        if (statusChange.status == "Đồng ý"){
+          updateCalendar(request);
+        }
+        draftEmail(request);
+        sendEmail(request);
+      }
+    }
+  }
+}
